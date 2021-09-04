@@ -1,9 +1,10 @@
 import React, {useState,useEffect, useCallback,useMemo} from 'react';
 import styled from '@emotion/styled';
 import { ThemeProvider } from '@emotion/react';
-import { getMoment } from './utils/helpers';
+import { getMoment, findLocation} from './utils/helpers';
 import WeatherCard from './Views/WeatherCard';
 import useWeatherAPI from './hooks/useWeatherAPI';
+import WeatherSetting from './Views/WeatherSetting';
 
 
 const Container = styled.div`
@@ -35,23 +36,35 @@ const theme = {
 };
 
 const AUTHORIZATION_KEY = "CWB-760A9503-9E21-4058-A384-017C03ED2C76";
-const LOCATION_NAME = '臺北';
-const LOCATION_NAME_FORECAST = '臺北市';
   
 
 function App() {
+ 
+  const [currentPage, setCurrentPage] = useState('WeatherCard');
+  const handleCurrentPageChange = (currentPage)=>{
+    setCurrentPage(currentPage);
+  };  
 
+  const [currentCity, setCurrentCity] = useState('臺北市');
+  const currentLocation = useMemo(
+    ()=> findLocation(currentCity),[currentCity,]
+  );
+  const handleCurrentCityChange = (currentCity)=>{
+    setCurrentCity(currentCity);
+  };
+  const {cityName, locationName, sunriseCityName} = currentLocation;
+  // TODO: 等使用者可以修改地區時要修改裡面的參數，先將 dependencies array 設為空陣列
+  const moment = useMemo(() => getMoment(sunriseCityName), [sunriseCityName]);
+  
   const [weatherElement, fetchData]=useWeatherAPI(
     {
-      locationName: LOCATION_NAME,
-      cityName: LOCATION_NAME_FORECAST,
+      locationName,
+      cityName,
       authorizationKey: AUTHORIZATION_KEY,
     }
   );
   const [currentTheme, setCurrentTheme] = useState('light');
-  // TODO: 等使用者可以修改地區時要修改裡面的參數，先將 dependencies array 設為空陣列
-  const moment = useMemo(() => getMoment(LOCATION_NAME_FORECAST), []);
-  
+
   useEffect(()=>{
       setCurrentTheme(moment === 'day' ? 'light': 'dark');
     },[moment]);
@@ -59,11 +72,22 @@ function App() {
   return (
     <ThemeProvider theme={theme[currentTheme]}>
       <Container>
-        <WeatherCard 
+        {currentPage === 'WeatherCard'&&
+        (<WeatherCard 
+          cityName = {cityName}
           weatherElement={weatherElement}
           moment={moment}
           fetchData={fetchData}
-        />
+          handleCurrentPageChange={handleCurrentPageChange}
+          />
+        )}
+        {currentPage === 'WeatherSetting' && 
+          <WeatherSetting
+            cityName={cityName}
+            handleCurrentCityChange={handleCurrentCityChange}
+            handleCurrentPageChange={handleCurrentPageChange}
+          />
+        }
       </Container>
     </ThemeProvider>
   );
