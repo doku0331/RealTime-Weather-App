@@ -39,13 +39,15 @@ const AUTHORIZATION_KEY = "CWB-760A9503-9E21-4058-A384-017C03ED2C76";
   
 
 function App() {
- 
+  //頁面切換
   const [currentPage, setCurrentPage] = useState('WeatherCard');
   const handleCurrentPageChange = (currentPage)=>{
     setCurrentPage(currentPage);
   };  
 
-  const [currentCity, setCurrentCity] = useState('臺北市');
+  //選擇城市邏輯
+  const stroageCity = localStorage.getItem('cityName')||'臺北市';
+  const [currentCity, setCurrentCity] = useState(stroageCity);
   const currentLocation = useMemo(
     ()=> findLocation(currentCity),[currentCity,]
   );
@@ -53,9 +55,9 @@ function App() {
     setCurrentCity(currentCity);
   };
   const {cityName, locationName, sunriseCityName} = currentLocation;
-  // TODO: 等使用者可以修改地區時要修改裡面的參數，先將 dependencies array 設為空陣列
   const moment = useMemo(() => getMoment(sunriseCityName), [sunriseCityName]);
   
+  //拉資料邏輯
   const [weatherElement, fetchData]=useWeatherAPI(
     {
       locationName,
@@ -63,6 +65,7 @@ function App() {
       authorizationKey: AUTHORIZATION_KEY,
     }
   );
+
   const [currentTheme, setCurrentTheme] = useState('light');
 
   useEffect(()=>{
